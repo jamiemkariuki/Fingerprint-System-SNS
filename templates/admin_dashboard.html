@@ -443,17 +443,48 @@
 
 <div id="Settings" class="tab-content">
     <div class="card">
-        <h3>Settings</h3>
+        <h3>Email Report Settings</h3>
         <form method="post" action="{{ url_for('admin.save_settings') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <label for="send_days">Send Days</label>
-            <input id="send_days" name="send_days" value="{{ send_days|join(',') }}" placeholder="e.g. 1,2,3,4,5">
-            <button type="submit">Save Settings</button>
+
+            <label>Send Reports On:</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin: 10px 0 20px 0;">
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" name="send_days" value="0" {% if '0' in send_days %}checked{% endif %}> Mon
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" name="send_days" value="1" {% if '1' in send_days %}checked{% endif %}> Tue
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" name="send_days" value="2" {% if '2' in send_days %}checked{% endif %}> Wed
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" name="send_days" value="3" {% if '3' in send_days %}checked{% endif %}> Thu
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" name="send_days" value="4" {% if '4' in send_days %}checked{% endif %}> Fri
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" name="send_days" value="5" {% if '5' in send_days %}checked{% endif %}> Sat
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" name="send_days" value="6" {% if '6' in send_days %}checked{% endif %}> Sun
+                </label>
+            </div>
+
+            <label for="send_time">Send Reports At:</label>
+            <input type="time" id="send_time" name="send_time" value="{{ send_time }}" style="margin-bottom: 15px;">
+
+            <button type="submit" class="btn">Save Settings</button>
         </form>
+    </div>
+    <div class="card" style="margin-top: 20px;">
+        <h3>Fingerprint Listener</h3>
         <form method="post" action="{{ url_for('admin.toggle_fingerprint_listener') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <p>Fingerprint Listener: {{ 'Enabled' if listener_enabled else 'Disabled' }}</p>
-            <button type="submit">{{ 'Disable' if listener_enabled else 'Enable' }}</button>
+            <p>Status: <strong>{{ 'Enabled' if listener_enabled else 'Disabled' }}</strong></p>
+            <button type="submit" class="btn">{{ 'Disable Listener' if listener_enabled else 'Enable Listener'
+                }}</button>
         </form>
     </div>
 </div>

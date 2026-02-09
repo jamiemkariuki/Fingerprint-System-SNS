@@ -42,6 +42,10 @@ def admin_dashboard():
         listener_setting = cursor.fetchone()
         listener_enabled = listener_setting['value'] == '1' if listener_setting else True
 
+        cursor.execute("SELECT `value` FROM Settings WHERE `key` = 'send_time'")
+        send_time_setting = cursor.fetchone()
+        send_time = send_time_setting['value'] if send_time_setting else '08:00'
+
         cursor.execute("SELECT * FROM Parents ORDER BY name")
         parents = cursor.fetchall()
 
@@ -145,6 +149,7 @@ def admin_dashboard():
             teacher_assignments=teacher_assignments,
             exam_results=exam_results,
             send_days=send_days,
+            send_time=send_time,
             listener_enabled=listener_enabled,
             student_count=student_count,
             teacher_count=teacher_count,
@@ -268,12 +273,14 @@ def save_settings():
 
     send_days = request.form.getlist("send_days")
     send_days_str = ",".join(send_days)
+    send_time = request.form.get("send_time", "08:00")
 
     conn = None
     try:
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute("INSERT INTO Settings (`key`, `value`) VALUES ('send_days', %s) ON DUPLICATE KEY UPDATE `value` = %s", (send_days_str, send_days_str))
+        cursor.execute("INSERT INTO Settings (`key`, `value`) VALUES ('send_time', %s) ON DUPLICATE KEY UPDATE `value` = %s", (send_time, send_time))
         conn.commit()
         flash("Settings saved successfully!", "success")
     except mysql.connector.Error as e:
