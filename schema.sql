@@ -174,9 +174,35 @@ CREATE TABLE IF NOT EXISTS `ExamResults` (
   FOREIGN KEY (`teacher_id`) REFERENCES `Teachers`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Insert defaults
+-- Exam Types Table (Dynamic exam type management)
+CREATE TABLE IF NOT EXISTS `ExamTypes` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(50) NOT NULL UNIQUE,
+  `is_active` BOOLEAN DEFAULT TRUE,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Published Exams Table (Controls result visibility)
+CREATE TABLE IF NOT EXISTS `PublishedExams` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `term` VARCHAR(20) NOT NULL,
+  `exam_type` VARCHAR(50) NOT NULL,
+  `is_published` BOOLEAN DEFAULT FALSE,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `unique_exam_publish` (`term`, `exam_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Insert default settings
 INSERT INTO Settings (`key`, `value`)
 VALUES 
-('send_days', '1,2,3,4,5'),
+('send_days', '0,1,2,3,4'),
+('send_time', '08:00'),
+('last_report_sent_date', NULL),
 ('fingerprint_listener_enabled', '1')
 ON DUPLICATE KEY UPDATE `key`=`key`;
+
+-- Insert default exam types
+INSERT INTO ExamTypes (`name`) VALUES 
+('Mid Term'), ('End of Term'), ('Mock'), ('Final')
+ON DUPLICATE KEY UPDATE `name`=`name`;
+
