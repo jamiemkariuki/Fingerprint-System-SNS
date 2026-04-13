@@ -11,21 +11,21 @@ logger = logging.getLogger("scheduler")
 
 def report_scheduler():
     """
-    Background thread that checks every 1 minutes if reports should be sent.
+    Background thread that checks every 60 seconds if reports should be sent.
     The actual send logic in email.py handles day/time/duplicate checks.
     """
     # Import here to avoid circular imports
     from src.main.utils.email import generate_and_send_reports
-    
-    logger.info("Report scheduler started. Will check every 1s minutes.")
+
+    logger.info("Report scheduler started. Will check every 60 seconds.")
     while True:
         try:
             logger.info("Running scheduled report check...")
             generate_and_send_reports()
         except Exception as e:
             logger.exception(f"Error in report scheduler: {e}")
-        
-        # Sleep for 15 minutes
+
+        # Sleep for 60 seconds
         time.sleep(60)
 
 if __name__ == "__main__":

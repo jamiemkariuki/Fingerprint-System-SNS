@@ -79,12 +79,15 @@ def generate_and_send_reports():
                     continue
                 try:
                     d = int(part)
+                    # Convert to 0-6 range (Monday=0, Sunday=6)
+                    # Support both 0-6 and 1-7 formats
+                    if 1 <= d <= 7:
+                        d = d - 1  # Convert 1-7 to 0-6
+                    if 0 <= d <= 6:
+                        send_days.append(str(d))
                 except ValueError:
+                    logger.warning(f"Invalid send_days value: {part}")
                     continue
-                if 0 <= d <= 6:
-                    send_days.append(str(d))
-                elif 1 <= d <= 7:
-                    send_days.append(str(d - 1))
 
         today_num = now.weekday()
         if str(today_num) not in send_days:

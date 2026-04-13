@@ -116,10 +116,10 @@ class FingerprintListener(threading.Thread):
 
     def run(self):
         logger.info("Fingerprint listener started.")
-        
+
         # Initial Cache Load
         self._refresh_cache_from_db()
-        
+
         last_cache_refresh = time.time()
 
         while True:
@@ -128,47 +128,60 @@ class FingerprintListener(threading.Thread):
                 self._refresh_cache_from_db()
                 last_cache_refresh = time.time()
 
+            # Clear old scans to prevent memory leak
+            self._clear_old_scans()
+
             try:
                 # 1. Check if allowed to run
                 # (Skipping DB check every loop for performance, relies on periodic refresh or restart if settings change)
-                
+
                 # 2. Capture
                 # We use a short timeout so we can check other conditions
                 template = self.scanner.capture_template(timeout=1)
-                
+
                 if template:
                     # 3. Match
                     match_id, score = self.scanner.match_template(template)
-                    
+
                     if match_id:
                         # match_id is string "student_123" or "teacher_456"
-                        p_type, p_id = match_id.split('_')
-                        p_id = int(p_id)
+                        # Parse safely to handle edge cases
+                        parts = match_id.split('_', 1)
+                        if len(parts) != 2:
+                            logger.warning(f"Invalid match_id format: {match_id}")
+                            continue
                         
+                        p_type, p_id_str = parts
+                        try:
+                            p_id = int(p_id_str)
+                        except ValueError:
+                            logger.warning(f"Invalid person ID in match_id: {match_id}")
+                            continue
+
                         logger.info(f"Matched {p_type} {p_id} (Score: {score})")
-                        
+
                         # Logic for "First Scan" vs "Log" (from original app)
                         # Original app logic: If scan is new -> "Scan again". If cached -> "Logged".
                         # Simplification for ZK: Just log it, but utilize debounce.
-                        
+
                         cache_key = (p_type, p_id)
                         now = datetime.now()
-                        
+
                         # Check debounce (e.g., don't log same person within 1 minute)
                         last_scan = self._first_scan_cache.get(cache_key)
                         if last_scan and (now - last_scan) < timedelta(minutes=1):
                             logger.info("Debounced scan.")
                             continue
-                            
+
                         self._first_scan_cache[cache_key] = now
                         self.log_fingerprint(p_type, p_id)
-                        
+
                         # Visual feedback delay
-                        time.sleep(1) 
+                        time.sleep(1)
                     else:
                         logger.info("Finger not recognized.")
                         time.sleep(1)
-                
+
             except Exception as e:
                 logger.error(f"Listener loop error: {e}")
                 time.sleep(1)

@@ -38,7 +38,8 @@ def update_setting(key, value):
         return True
     except mysql.connector.Error as e:
         logger.exception("Database error in update_setting: %s", e)
-        db.rollback()
+        if db:
+            db.rollback()
         return False
     finally:
         if cursor:

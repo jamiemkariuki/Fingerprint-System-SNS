@@ -7,11 +7,17 @@ from reportlab.lib import colors
 from reportlab.lib.units import inch
 import logging
 
-import logging
-import os
-from pypdf import PdfReader, PdfWriter
-
 logger = logging.getLogger(__name__)
+
+# Optional dependency for PDF header overlay
+try:
+    from pypdf import PdfReader, PdfWriter
+    PYPDF_AVAILABLE = True
+except ImportError:
+    PdfReader = None
+    PdfWriter = None
+    PYPDF_AVAILABLE = False
+    logger.warning("pypdf not installed. PDF header overlay will be disabled.")
 
 # Define Constants
 HEADER_PDF_PATH = "st nicholas logo and header.pdf"
@@ -60,6 +66,12 @@ def _get_table_style(header_cols, row_cols):
 
 def _add_header_to_pdf(generated_pdf_bytes):
     """Helper to overlay the header PDF onto each page of the generated PDF"""
+    import os
+    
+    if not PYPDF_AVAILABLE:
+        logger.debug("pypdf not available. Returning plain PDF without header.")
+        return generated_pdf_bytes
+    
     try:
         # Check if header PDF exists
         if not os.path.exists(HEADER_PDF_PATH):
@@ -70,22 +82,22 @@ def _add_header_to_pdf(generated_pdf_bytes):
         if not header_reader.pages:
             logger.error("Header PDF is empty. Returning plain PDF.")
             return generated_pdf_bytes
-        
+
         header_page = header_reader.pages[0]
-        
+
         generated_reader = PdfReader(BytesIO(generated_pdf_bytes))
         writer = PdfWriter()
-        
+
         for i, page in enumerate(generated_reader.pages):
             if i == 0:
                 page.merge_page(header_page)
             writer.add_page(page)
-            
+
         output_buffer = BytesIO()
         writer.write(output_buffer)
         return output_buffer.getvalue()
     except Exception as e:
-        logger.exception("Error adding header to PDF: %s", e)
+        logger.exception("Error adding header to PDF: %s. Returning plain PDF.", e)
         return generated_pdf_bytes
 
 

@@ -524,11 +524,11 @@ def manage_timetable():
         return redirect(url_for("teacher.teacher_dashboard"))
 
     action = request.form.get("action", "add")
-    
+
     conn = None
     try:
         conn = get_db()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
         if action == "add":
             subject_id = request.form.get("subject_id")
@@ -543,6 +543,7 @@ def manage_timetable():
                     "INSERT INTO Timetable (class, subject_id, teacher_id, day_of_week, start_time, end_time) VALUES (%s, %s, %s, %s, %s, %s)",
                     (teacher_class, subject_id, t_id, day_of_week, start_time, end_time)
                 )
+                conn.commit()
                 flash("Timetable entry added successfully.", "success")
             else:
                 flash("Missing required fields.", "error")
@@ -557,11 +558,18 @@ def manage_timetable():
 
             if timetable_id and subject_id and day_of_week and start_time and end_time:
                 t_id = teacher_id if teacher_id and teacher_id.strip() else None
+                # Verify this timetable entry belongs to teacher's class
+                cursor.execute("SELECT id FROM Timetable WHERE id = %s AND class = %s", (timetable_id, teacher_class))
+                if not cursor.fetchone():
+                    flash("Unauthorized to edit this timetable entry.", "error")
+                    return redirect(url_for("teacher.teacher_dashboard"))
+                
                 cursor.execute("""
-                    UPDATE Timetable 
+                    UPDATE Timetable
                     SET subject_id = %s, teacher_id = %s, day_of_week = %s, start_time = %s, end_time = %s
                     WHERE id = %s AND class = %s
                 """, (subject_id, t_id, day_of_week, start_time, end_time, timetable_id, teacher_class))
+                conn.commit()
                 flash("Timetable entry updated successfully.", "success")
             else:
                 flash("Missing required fields for update.", "error")
@@ -569,16 +577,19 @@ def manage_timetable():
         elif action == "delete":
             timetable_id = request.form.get("timetable_id")
             if timetable_id:
+                # Verify this timetable entry belongs to teacher's class
                 cursor.execute("DELETE FROM Timetable WHERE id = %s AND class = %s", (timetable_id, teacher_class))
                 if cursor.rowcount > 0:
+                    conn.commit()
                     flash("Timetable entry deleted.", "success")
                 else:
-                    flash("Could not delete entry.", "error")
+                    flash("Could not delete entry or unauthorized access.", "error")
 
-        conn.commit()
     except mysql.connector.Error as e:
         logger.exception("MySQL Error managing timetable: %s", e)
         flash(f"Database error: {e}", "error")
+        if conn:
+            conn.rollback()
     finally:
         if conn:
             conn.close()
