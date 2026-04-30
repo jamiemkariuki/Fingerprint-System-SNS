@@ -1,0 +1,6 @@
+Host fingerprint-web-server
+    HostName 54.38.148.83
+    User srwgrnvc
+    Port 1624
+    IdentityFile ~/.ssh/id_rsa
+    StrictHostKeyChecking no

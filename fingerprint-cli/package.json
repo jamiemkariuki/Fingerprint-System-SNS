@@ -1,0 +1,34 @@
+{
+  "name": "fingerprint-sns-cli",
+  "version": "1.2.3",
+  "description": "CLI tool for managing St. Nicholas Senior School fingerprint attendance system",
+  "main": "index.js",
+  "bin": {
+    "fpsns": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "setup": "node scripts/setup.js",
+    "start": "node bin/cli.js",
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "keywords": ["fingerprint", "biometric", "attendance", "school", "cli"],
+  "author": "St. Nicholas Senior School",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.0.0",
+    "inquirer": "^9.2.0",
+    "chalk": "^5.2.0",
+    "ora": "^6.3.0",
+    "axios": "^1.4.0",
+    "bcrypt": "^5.1.0",
+    "pg": "^8.11.0",
+    "python-shell": "^5.0.0",
+    "dotenv": "^16.0.3",
+    "rimraf": "^4.0.0",
+    "glob": "^10.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

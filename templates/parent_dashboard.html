@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="admin-nav">
+<button class="menu-toggle" onclick="toggleMenu()">☰ Menu</button>
+<div class="admin-nav" id="adminNav">
     <button class="tab-link active" onclick="openTab(event, 'Overview')">Overview</button>
+    <button class="tab-link" onclick="openTab(event, 'Children')">Children</button>
+    <button class="tab-link" onclick="openTab(event, 'Attendance')">Attendance</button>
+    <button class="tab-link" onclick="openTab(event, 'Reports')">Reports</button>
+    <button class="tab-link" onclick="openTab(event, 'Messages')">Messages</button>
 </div>
 
 <div id="Overview" class="tab-content active">
@@ -222,19 +227,21 @@
         border-bottom: 2px solid var(--border-color);
         background-color: var(--off-white);
         padding: 0 10px;
+        -webkit-overflow-scrolling: touch;
     }
 
     .tab-link {
         background-color: #f8f9fa;
         border: 1px solid var(--border-color);
-        padding: 12px 20px;
+        padding: 12px 16px;
         cursor: pointer;
-        font-size: 1em;
+        font-size: 0.9em;
         font-weight: 600;
         border-radius: 5px 5px 0 0;
         margin-right: 5px;
         color: var(--text-dark);
         transition: background-color 0.3s, color 0.3s;
+        white-space: nowrap;
     }
 
     .tab-link:hover {
@@ -263,12 +270,62 @@
         border-left: 4px solid orange;
     }
 
-    .child-status-absent {
+.child-status-absent {
         border-left: 4px solid red;
+    }
+    
+    .menu-toggle {
+        display: none;
+        width: 100%;
+        padding: 14px 16px;
+        background: var(--brown-medium);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: left;
+        margin-bottom: 12px;
+    }
+    
+    @media (max-width: 768px) {
+        .menu-toggle {
+            display: block;
+        }
+        
+        .admin-nav {
+            display: none;
+            flex-direction: column;
+            padding: 12px;
+            gap: 8px;
+            border-radius: 8px;
+        }
+        
+        .admin-nav.active {
+            display: flex;
+        }
+        
+        .tab-link {
+            width: 100%;
+            text-align: center;
+            padding: 14px;
+            border-radius: 6px;
+            margin-right: 0;
+        }
+        
+        .tab-content {
+            margin-top: 12px;
+        }
     }
 </style>
 
 <script>
+    function toggleMenu() {
+        var nav = document.getElementById('adminNav');
+        nav.classList.toggle('active');
+    }
+    
     document.addEventListener('DOMContentLoaded', function () {
         var tabcontent = document.getElementsByClassName("tab-content");
         for (var i = 0; i < tabcontent.length; i++) {

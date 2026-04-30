@@ -278,62 +278,163 @@ table tbody tr:hover {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+    
     body {
-        font-size: 0.95rem;
+        font-size: 14px;
+    }
+    
+    .header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
     }
 
     .nav {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 12px 16px;
+    }
+
+    .brand {
+        font-size: 1em;
+    }
+    
+    .brand img {
+        height: 32px;
     }
 
     .nav-links {
-        margin-top: 15px;
+        display: flex;
         flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+        width: 100%;
     }
 
     .nav-links li {
-        margin-left: 0;
-        margin-right: 15px;
-        margin-bottom: 10px;
+        margin: 0;
+    }
+
+    .nav-links a {
+        padding: 10px 14px;
+        font-size: 0.9em;
+        background: var(--brown-medium);
+        border-radius: 6px;
+        white-space: nowrap;
+    }
+
+    .main {
+        padding: 12px;
+        min-height: calc(100vh - 120px);
     }
 
     .container {
-        padding: 0 15px;
+        padding: 0;
     }
 
     .card {
-        padding: 20px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border-radius: 10px;
+    }
+
+    .card h2, .card h3 {
+        font-size: 1.2em;
+        margin-bottom: 12px;
+    }
+    
+    .grid {
+        grid-template-columns: 1fr;
     }
 
     .btn, button {
         width: 100%;
-        margin-top: 10px;
-        padding: 15px;
+        padding: 14px 20px;
+        font-size: 1em;
+        margin-top: 8px;
+        border-radius: 8px;
+        -webkit-appearance: none;
     }
 
+    form input, form select {
+        padding: 14px;
+        font-size: 16px;
+    }
+    
     form label {
-        font-size: 1.1em;
+        font-size: 1em;
+        margin-bottom: 6px;
     }
 
     .table-responsive {
         display: block;
         width: 100%;
+        margin: 0 -16px;
+        padding: 0 16px;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
 
-    .table-responsive table {
-        min-width: 600px; /* Adjust as needed */
+    table {
+        font-size: 0.85em;
+    }
+    
+    table th, table td {
+        padding: 10px 8px;
+    }
+
+    .flash {
+        padding: 12px;
+        font-size: 0.9em;
+    }
+    
+    .footer {
+        padding: 12px;
+    }
+    
+    .footer p {
+        font-size: 0.8em;
+    }
+}
+
+/* Mobile menu toggle */
+.menu-toggle {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+        width: 100%;
+        padding: 14px 16px;
+        background: var(--brown-medium);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: left;
     }
 }
 
 @media (max-width: 480px) {
     .brand {
-        font-size: 1.5em;
+        font-size: 0.9em;
+    }
+    
+    .brand img {
+        height: 28px;
+    }
+    
+    .nav-links a {
+        padding: 8px 12px;
+        font-size: 0.85em;
     }
 
-    .card h2, .card h3 {
-        font-size: 1.4em;
+    .card {
+        padding: 14px;
     }
 }

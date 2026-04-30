@@ -8,8 +8,8 @@ sys.path.append(os.path.join(dir_path, "dll"))
 
 import clr
 
-from pyzkfp._construct.errors_handler import *
-from pyzkfp._construct.zkfp import * # this file adds code snippets hints. 
+from ._construct.errors_handler import *
+from ._construct.zkfp import * # this file adds code snippets hints. 
 
 try:
     from PIL import Image

@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class Config:
     # !!! IMPORTANT !!!
     # In a production environment, SECRET_KEY should be a strong, randomly generated value
@@ -14,18 +15,20 @@ class Config:
     # !!! IMPORTANT !!!
     # In a production environment, SESSION_COOKIE_SECURE should be True if served over HTTPS.
     # This prevents the browser from sending the cookie over unencrypted HTTP connections.
-    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    SESSION_COOKIE_SECURE = (
+        os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    )
     SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
-    
-    DB_HOST = os.getenv('DB_HOST', 'localhost')
-    DB_USER = os.getenv('DB_USER', 'fp_user')
-    # !!! IMPORTANT !!!
-    # In a production environment, DB_PASSWORD must be set to a strong password
-    # and loaded from an environment variable or a secure configuration management system.
-    # An empty string as default is highly insecure for production.
-    DB_PASSWORD = os.getenv('DB_PASSWORD', 'fp_pass')
-    DB_NAME = os.getenv('DB_NAME', 'fpsnsdb')
-    DB_PORT = int(os.getenv('DB_PORT', '3306'))
+
+    # Database configuration
+    USE_POSTGRES = os.getenv("USE_POSTGRES", "false").lower() in ("1", "true", "yes")
+    DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL") or ""
+
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_USER = os.getenv("DB_USER", "fp_user")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "fp_pass")
+    DB_NAME = os.getenv("DB_NAME", "fpsnsdb")
+    DB_PORT = int(os.getenv("DB_PORT", "3306"))
     DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "5"))
 
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()

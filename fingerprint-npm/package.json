@@ -1,0 +1,53 @@
+{
+  "name": "@fpsns/cli",
+  "version": "1.0.0",
+  "description": "Fingerprint System SNS - CLI with auto-connect to NeonDB",
+  "main": "lib/index.js",
+  "bin": {
+    "fpsns": "bin/fpsns.js"
+  },
+  "scripts": {
+    "test": "node bin/fpsns.js --help",
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "keywords": [
+    "fingerprint",
+    "biometric",
+    "zk9500",
+    "neondb",
+    "postgresql",
+    "attendance"
+  ],
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kilo-Org/kilocode.git"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "inquirer": "^9.2.12",
+    "ora": "^5.4.1",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "os": [
+    "win32",
+    "linux"
+  ],
+  "type": "commonjs",
+  "files": [
+    "bin/",
+    "lib/",
+    "scripts/",
+    "README.md"
+  ]
+}

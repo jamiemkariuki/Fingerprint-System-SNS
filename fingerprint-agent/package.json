@@ -1,0 +1,32 @@
+{
+  "name": "@fpsns/agent",
+  "version": "1.0.0",
+  "description": "Fingerprint System SNS - Local Agent CLI",
+  "main": "bin/fingerprint-agent.js",
+  "bin": {
+    "fpsns-agent": "./bin/fingerprint-agent.js"
+  },
+  "scripts": {
+    "install": "node scripts/preinstall.js",
+    "preuninstall": "node scripts/preuninstall.js"
+  },
+  "keywords": ["fingerprint", "biometric", "zk9500"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "inquirer": "^9.2.12",
+    "jsonwebtoken": "^9.0.2",
+    "keytar": "^7.9.0",
+    "node-pty": "^1.0.0",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1",
+    "uuid": "^9.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "os": ["win32", "linux"]
+}

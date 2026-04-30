@@ -1,6 +1,8 @@
 import time
 import threading
 import logging
+import os
+
 try:
     from zkfp import ZKFP2
 except ImportError:
@@ -8,9 +10,49 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+USE_MOCK = os.getenv("MOCK_SCANNER", "").lower() in ("1", "true", "yes")
+
+
+# Mock scanner for testing without hardware
+class MockZKFP:
+    def __init__(self):
+        self.device_count = 1
+        self.connected = False
+
+    def Init(self):
+        return True
+
+    def GetDeviceCount(self):
+        return 1
+
+    def OpenDevice(self, index=0):
+        self.connected = True
+        return True
+
+    def AcquireFingerprint(self):
+        time.sleep(0.5)
+        import random
+
+        template = bytes([random.randint(0, 255) for _ in range(512)])
+        image = bytes([random.randint(0, 255) for _ in range(25600)])
+        return (template, image)
+
+    def DBMatch(self, template1, template2):
+        if template1 == template2:
+            return 100
+        return 0
+
+    def CloseDevice(self):
+        self.connected = False
+
+    def Terminate(self):
+        pass
+
+
 # Singleton simulation for module-level access
 _scanner_instance = None
 _lock = threading.Lock()
+
 
 class FingerprintScanner:
     def __init__(self):
@@ -25,12 +67,21 @@ class FingerprintScanner:
         self._init_hardware()
 
     def _init_hardware(self):
+        # Use mock scanner if enabled
+        if USE_MOCK:
+            logger.info("Using MOCK scanner (MOCK_SCANNER=1)")
+            self.zk = MockZKFP()
+            self.device_count = 1
+            self.is_connected = True
+            self.initialized = True
+            return
+
         # Prevent rapid re-initialization attempts (Backoff Strategy)
         if (time.time() - self._last_init_attempt) < 5:
             return
 
         self._last_init_attempt = time.time()
-        
+
         # If we are already connected, verify it's still alive, otherwise reset
         if self.is_connected:
             return
@@ -41,14 +92,16 @@ class FingerprintScanner:
                 if self.zk is None:
                     self.zk = ZKFP2()
                     self.zk.Init()
-                
+
                 self.device_count = self.zk.GetDeviceCount()
                 logger.info(f"ZKFP initialized. Devices found: {self.device_count}")
-                
+
                 if self.device_count > 0:
                     # If all devices are banned, reset the ban list to try again
                     if len(self.banned_indices) >= self.device_count:
-                        logger.warning("All devices were banned. Resetting ban list to retry.")
+                        logger.warning(
+                            "All devices were banned. Resetting ban list to retry."
+                        )
                         self.banned_indices.clear()
 
                     # Try to open available devices until one works
@@ -66,17 +119,19 @@ class FingerprintScanner:
                             break
                         except Exception as open_err:
                             logger.warning(f"Failed to open device {i}: {open_err}")
-                    
+
                     if not self.is_connected:
                         logger.error("Could not open any detected devices.")
             except Exception as e:
                 logger.error(f"ZKFP Initialization/Connection failed: {e}")
                 # If Init failed, maybe we need to recreate the object next time
-                self.zk = None 
+                self.zk = None
         else:
-            if not self.initialized: # Log once
+            if not self.initialized:  # Log once
                 logger.warning("ZKFP library not found. Running in MOCK mode.")
-            self.initialized = True # Mark as "initialized" so we don't spam mock warning
+            self.initialized = (
+                True  # Mark as "initialized" so we don't spam mock warning
+            )
 
     def load_users(self, users_dict):
         """
@@ -101,7 +156,7 @@ class FingerprintScanner:
 
         start_time = time.time()
         while (time.time() - start_time) < timeout:
-            try: 
+            try:
                 capture = self.zk.AcquireFingerprint()
                 if capture:
                     tmp, img = capture
@@ -111,16 +166,18 @@ class FingerprintScanner:
                 err_msg = str(e).lower()
                 if "handle" in err_msg or "device" in err_msg:
                     logger.error(f"Hardware connection lost: {e}")
-                    
+
                     # Mark this specific index as bad so we don't pick it again immediately
                     if self.current_device_index != -1:
-                        logger.warning(f"Banning device index {self.current_device_index} due to error.")
+                        logger.warning(
+                            f"Banning device index {self.current_device_index} due to error."
+                        )
                         self.banned_indices.add(self.current_device_index)
-                    
+
                     self.is_connected = False
                     self.current_device_index = -1
                     return None
-                
+
                 # For other errors (glitches), just log and continue
                 logger.error(f"Capture error: {e}")
                 time.sleep(1)
@@ -137,7 +194,7 @@ class FingerprintScanner:
 
         best_score = 0
         best_id = None
-        
+
         with _lock:
             # We iterate over a copy of items to avoid runtime errors if cache changes
             for uid, stored_tmpl in list(self.users_cache.items()):
@@ -148,16 +205,17 @@ class FingerprintScanner:
                         best_id = uid
                 except:
                     continue
-        
+
         return best_id, best_score
-    
+
     def close(self):
-        if self.zk: 
+        if self.zk:
             try:
                 self.zk.CloseDevice()
                 self.zk.Terminate()
-            except: 
+            except:
                 pass
+
 
 # Global instance
 def get_scanner():
@@ -166,11 +224,12 @@ def get_scanner():
         _scanner_instance = FingerprintScanner()
     return _scanner_instance
 
+
 # Wrapper functions to maintain some compatibility or easy access
 def enroll_fingerprint(db_id=None):
     """
     Captures a fingerprint and returns the template bytes.
-    Note: The original app expected an ID returned. 
+    Note: The original app expected an ID returned.
     Here we return the TEMPLATE (bytes) so the caller can save it to DB.
     """
     scanner = get_scanner()
@@ -181,6 +240,7 @@ def enroll_fingerprint(db_id=None):
         return template
     logger.warning("Enrollment capture timed out.")
     return None
+
 
 # Export 'finger'-like object if needed, but we prefer direct usage
 finger = get_scanner()

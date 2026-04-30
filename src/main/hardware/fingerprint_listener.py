@@ -2,8 +2,18 @@ import os
 import logging
 from dotenv import load_dotenv
 import time
-import mysql.connector
+
+# Conditional import based on database type
+from ..config import Config
+
+if Config.USE_POSTGRES:
+    import psycopg2
+    import psycopg2.extras
+else:
+    import mysql.connector
+
 from ..database import get_db as connect_db
+
 # from ..hardware.lcd import lcd # LCD not supported
 from ..hardware.fingerprint import get_scanner
 from datetime import datetime, timedelta
@@ -13,14 +23,17 @@ import queue
 load_dotenv()
 
 # --- Constants ---
-PERSON_TYPE_STUDENT = 'student'
-PERSON_TYPE_TEACHER = 'teacher'
+PERSON_TYPE_STUDENT = "student"
+PERSON_TYPE_TEACHER = "teacher"
 
 # --- Logging ---
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO),
-                    format="%(asctime)s %(levelname)s %(name)s - %(message)s")
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+)
 logger = logging.getLogger("fingerprint_listener")
+
 
 class FingerprintListener(threading.Thread):
     def __init__(self, app, scan_queue):
@@ -38,38 +51,44 @@ class FingerprintListener(threading.Thread):
             try:
                 conn = connect_db()
                 cursor = conn.cursor(dictionary=True)
-                
+
                 # Fetch Users
-                cursor.execute("SELECT id, fingerprint_template FROM Users WHERE fingerprint_template IS NOT NULL")
+                cursor.execute(
+                    "SELECT id, fingerprint_template FROM Users WHERE fingerprint_template IS NOT NULL"
+                )
                 users = cursor.fetchall()
-                
+
                 # Fetch Teachers
-                cursor.execute("SELECT id, fingerprint_template FROM Teachers WHERE fingerprint_template IS NOT NULL")
+                cursor.execute(
+                    "SELECT id, fingerprint_template FROM Teachers WHERE fingerprint_template IS NOT NULL"
+                )
                 teachers = cursor.fetchall()
 
                 # Merge into a single dict: { 'student_123': bytes, 'teacher_456': bytes }
                 # We prefix IDs to distinguish types
                 cache = {}
                 for u in users:
-                    if u['fingerprint_template']:
-                        cache[f"student_{u['id']}"] = u['fingerprint_template']
+                    if u["fingerprint_template"]:
+                        cache[f"student_{u['id']}"] = u["fingerprint_template"]
                 for t in teachers:
-                    if t['fingerprint_template']:
-                        cache[f"teacher_{t['id']}"] = t['fingerprint_template']
-                
+                    if t["fingerprint_template"]:
+                        cache[f"teacher_{t['id']}"] = t["fingerprint_template"]
+
                 self.scanner.load_users(cache)
-                
+
             except Exception as e:
                 logger.error(f"Failed to refresh fingerprint cache: {e}")
             finally:
-                if conn: conn.close()
+                if conn:
+                    conn.close()
 
     def _clear_old_scans(self):
         now = datetime.now()
         keys_to_remove = []
         for key, scan_time in self._first_scan_cache.items():
-            if (now - scan_time) > timedelta(hours=24) or \
-               (now.hour >= 22 and scan_time.date() < now.date()):
+            if (now - scan_time) > timedelta(hours=24) or (
+                now.hour >= 22 and scan_time.date() < now.date()
+            ):
                 keys_to_remove.append(key)
         for key in keys_to_remove:
             self._first_scan_cache.pop(key)
@@ -80,39 +99,42 @@ class FingerprintListener(threading.Thread):
             try:
                 conn = connect_db()
                 cursor = conn.cursor(dictionary=True)
-                
+
                 # Determine IN or OUT
                 # Check the very last log for this person
                 cursor.execute(
                     "SELECT log_type FROM FingerprintLogs WHERE person_type = %s AND person_id = %s ORDER BY id DESC LIMIT 1",
-                    (person_type, person_id)
+                    (person_type, person_id),
                 )
                 last_log = cursor.fetchone()
-                
-                new_type = 'IN'
-                if last_log and last_log['log_type'] == 'IN':
-                    new_type = 'OUT'
-                
+
+                new_type = "IN"
+                if last_log and last_log["log_type"] == "IN":
+                    new_type = "OUT"
+
                 # Insert
                 cursor.execute(
                     "INSERT INTO FingerprintLogs (person_type, person_id, log_type) VALUES (%s, %s, %s)",
-                    (person_type, person_id, new_type)
+                    (person_type, person_id, new_type),
                 )
                 conn.commit()
-                
-                action = "Checked IN" if new_type == 'IN' else "Checked OUT"
+
+                action = "Checked IN" if new_type == "IN" else "Checked OUT"
                 logger.info(f"[LOG] {person_type} ID {person_id} - {action}")
-                
-                self.scan_queue.put({
-                    "person_type": person_type,
-                    "person_id": person_id,
-                    "type": new_type,
-                    "timestamp": datetime.now().isoformat()
-                })
+
+                self.scan_queue.put(
+                    {
+                        "person_type": person_type,
+                        "person_id": person_id,
+                        "type": new_type,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
             except Exception as e:
                 logger.error(f"DB error during logging: {e}")
             finally:
-                if conn: conn.close()
+                if conn:
+                    conn.close()
 
     def run(self):
         logger.info("Fingerprint listener started.")
@@ -146,11 +168,11 @@ class FingerprintListener(threading.Thread):
                     if match_id:
                         # match_id is string "student_123" or "teacher_456"
                         # Parse safely to handle edge cases
-                        parts = match_id.split('_', 1)
+                        parts = match_id.split("_", 1)
                         if len(parts) != 2:
                             logger.warning(f"Invalid match_id format: {match_id}")
                             continue
-                        
+
                         p_type, p_id_str = parts
                         try:
                             p_id = int(p_id_str)

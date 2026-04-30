@@ -1,0 +1,6 @@
+flask>=3.0.0
+psycopg[binary]>=3.1.0
+python-dotenv>=1.0.0
+bcrypt>=4.0.1
+pyzkfp>=0.1.5
+pythonnet>=3.0.0

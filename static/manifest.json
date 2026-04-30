@@ -1,0 +1,22 @@
+{
+  "name": "St. Nicholas Senior School Attendance",
+  "short_name": "SNS Attendance",
+  "description": "Biometric attendance system for St. Nicholas Senior School",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#4A2C2A",
+  "theme_color": "#4A2C2A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
