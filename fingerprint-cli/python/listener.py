@@ -267,7 +267,7 @@ def main():
                     if not templates:
                         print("No enrolled users")
                     else:
-                        scanner.load_users({uid: tmpl for uid, (_, tmpl) in templates.items()})
+                        scanner.load_users(templates)
                         user_id, score = scanner.match_template(template)
                         
                         if user_id:
